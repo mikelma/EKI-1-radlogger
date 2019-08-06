@@ -16,7 +16,7 @@ DS3231 Clock;
 File loggerFile;
 
 const int interruptPin = 2;
-const int cycle = 10000;
+const int cycle = 60000;
 int count = 0;
 bool century = false;
 bool h12;
