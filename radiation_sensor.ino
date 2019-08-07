@@ -11,12 +11,13 @@
 */
 
 #define PIN_SDCS 10 // SD Chip Select
+#define NOTIFY_PIN 4 // 2 blinks if OK, 3 blinks if ERROR
 
 DS3231 Clock;
 File loggerFile;
 
 const int interruptPin = 2;
-const int cycle = 60000;
+const unsigned long cycle = 60000;
 int count = 0;
 bool century = false;
 bool h12;
@@ -27,6 +28,7 @@ void setup() {
   // Define pins
   pinMode(interruptPin, INPUT);
   attachInterrupt(digitalPinToInterrupt(interruptPin), notify, FALLING);
+  pinMode(NOTIFY_PIN, OUTPUT);
 
   // Start the I2C interface
   Wire.begin();
@@ -40,16 +42,25 @@ void setup() {
 
   // Init serial
   Serial.begin(9600);
-  while (!Serial);
+  while (!Serial) {
+    notify_blink(3);
+    delay(500);
+  }
   Serial.println("Serial initialized.");
+  notify_blink(2);
+  delay(500);
 
   // Init SD Card
   Serial.println("Initializing SD card...");
-  if (!SD.begin(PIN_SDCS)) {
-    Serial.println(" Initialization failed!");
-    return;
+
+  while (!SD.begin(PIN_SDCS)) {
+    notify_blink(3);
+    delay(500);
   }
   Serial.println("SD Card initialized.");
+  notify_blink(2);
+  delay(500);
+
 }
 
 void loop() {
@@ -90,4 +101,13 @@ String getDateStr() {
   data_str += Clock.getSecond();
   return (data_str);
 
+}
+
+void notify_blink(int t) {
+  for (int i = 0; i < t; i ++) {
+    digitalWrite(NOTIFY_PIN, HIGH);
+    delay(100);
+    digitalWrite(NOTIFY_PIN, LOW);
+    delay(100);
+  }
 }
